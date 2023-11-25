@@ -14,15 +14,15 @@ dp[i, j] = 2 * max(dp[i+1, j] + data[i], dp[i, j-1] + data[j])
 #include <iostream>
 #include <stdio.h>
 #include <algorithm>
-/*
+
+long long p=1e18; //long long範圍
+
 struct int128
 {
     long long hig;
     long long low;
 };
-int n,m;
-long long p=1e18; //long long範圍
-int128 ans,f[85][85][85],a[85][85];
+
 int128 max(int128 a,int128 b)
 {
 	if(a.hig>b.hig) return a;
@@ -49,29 +49,31 @@ int128 operator * (int128 a,int b)
 	k.low%=p;
 	return k;
 }
-*/
-int dp_sum(int front, int back, int** matrix, int row, int sum);
+
+int128 dp_sum(int front, int back, long long** matrix, int row, int128 sum);
 
 int main() {
 
-  int **matrix;
+  long long **matrix;
   int n, m;
 
   scanf("%d %d", &n, &m);
-  matrix = new int *[n];
+  matrix = new long long *[n];
   for (int i = 0; i < n; i++) {
-    matrix[i] = new int[m];
+    matrix[i] = new long long[m];
   }
 
   int head;
   int tail;
-  int sum = 0;
-  int row_total;
+  int128 sum;
+  sum.low = 0;
+  sum.hig = 0;
+
 
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < m; j++) 
     {
-      scanf("%d", &matrix[i][j]);
+      scanf("%lld", &matrix[i][j]);
     }
   }
 
@@ -79,12 +81,16 @@ int main() {
   {
     head = 0;
     tail = m - 1;
-    sum += dp_sum(head, tail, matrix, i, 0);
+    int128 sum_row;
+    sum_row.hig = 0;
+    sum_row.low = 0;
+    sum = sum + dp_sum(head, tail, matrix, i, sum_row);
   }
 
 
   
-  printf("%d\n", sum);
+  if(sum.hig==0)	printf("%lld",sum.low);
+  else	printf("%lld%018lld\n",sum.hig,sum.low);
 
 
   for (int i = 0; i < n; i++) 
@@ -98,31 +104,28 @@ int main() {
   return 0;
 }
 
-int dp_sum(int front, int back, int** matrix, int row, int sum) 
+int128 dp_sum(int front, int back, long long** matrix, int row, int128 sum) 
 {
     int front_dp = front;
     int back_dp = back;
     
 
-    if(front_dp == back_dp) return 2*matrix[row][front_dp];
-    /*
-    else if(matrix[row][front_dp] + dp_sum(front_dp+1, back_dp, matrix, row, sum) >= matrix[row][back_dp] + dp_sum(front_dp, back_dp-1, matrix, row, sum))
+    if(front_dp == back_dp) 
     {
-      //printf("take %d out\n", matrix[row][front_dp]);
-      sum = 2*(matrix[row][front_dp] + dp_sum(front_dp+1, back_dp, matrix, row, sum));
-      //printf("sum is %d now\n", sum);
-      return sum;
+      int128 temp;
+      temp.hig = 0;
+      temp.low = 2*matrix[row][front_dp]; 
+      return temp;
     }
-    else
-    {
-      //printf("take %d out\n", matrix[row][back_dp]);
-      sum = 2*(matrix[row][back_dp] + dp_sum(front_dp, back_dp-1, matrix, row, sum));
-      //printf("sum is %d now\n", sum);
-      return sum;
-    }
-    */
     else 
     {
-      return std::max(2*(matrix[row][front_dp] + dp_sum(front_dp+1, back_dp, matrix, row, sum)), 2*(matrix[row][back_dp] + dp_sum(front_dp, back_dp-1, matrix, row, sum)));
+      int128 front_first;
+      int128 back_first;
+      front_first.hig = 0;
+      back_first.hig = 0;
+      front_first.low = matrix[row][front_dp];
+      back_first.low = matrix[row][back_dp];
+
+      return max((front_first + dp_sum(front_dp+1, back_dp, matrix, row, sum))*2, (back_first + dp_sum(front_dp, back_dp-1, matrix, row, sum))*2);
     }
 }
